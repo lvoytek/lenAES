@@ -24,7 +24,7 @@ var SBox = [
 /*
  * XOR each column of the state with a given word from the key schedule
  */
-function _addRoundKey(state, word)
+function addRoundKey(state, word)
 {
 	for(let c = 0; c < Nb; c++)
 	{
@@ -37,47 +37,204 @@ function _addRoundKey(state, word)
 	return state;
 }
 
-function _subBytes(state)
+/*
+ * Nonlinear byte by byte substitution using SBox
+ */
+function subBytes(state)
 {
+	for(let i = 0; i < Nb*4; i++)
+		state[i] = SBox[(state[i] >> 4) & 0xF][state[i] & 0xF];
 
+	return state;
 }
 
-function _shiftRows(state)
+/*
+ * Ciclical left shift of each row
+ */
+function shiftRows(state)
 {
+	let temp = 0;
+	for(let i = 0; i < 4; i++)
+	{
+		for(let shiftNum = 0; shiftNum < i; shiftNum++)
+		{
+			temp = state[i];
+			for(let shiftLoc = 0; shiftLoc < Nb - 1; shiftLoc++)
+				state[i + shiftLoc * 4] = state[i + (shiftLoc + 1) * 4];
 
+			state[i + shiftLoc*(Nb - 1)] = temp;
+		}
+	}
+
+	return state;
 }
 
-function _mixColumns(state)
+/*
+ * 8-bit Polynomial multiplication used for mixColumns
+ */
+function mul(s1, scalar)
 {
+	let product = 0;
 
+	//Reduce the scalar until it reaches 0 or 1, multiplying by 2 each time
+	while(scalar > 1)
+	{
+		//Multiply
+		product = product << 1;
+
+		//Will overflow, necessary to XOR with 1b
+		if((s1 >> 7 & 1) == 1)
+			product ^= 0x1b;
+
+		scalar -= 2;
+	}
+
+	//Add one more copy
+	if(scalar == 1)
+		product = product ^ s1;
+
+	//Confirm 8-bit
+	product &= 0xFF;
+
+	return product;
+}
+
+/*
+ * Transform each column by treating it as a four-term polynomial and
+ * multiplying it by a(x) = {03}x^3 + {01}x^2 + {01}x + {02}
+ *
+ * Multiplying refers to a normal * operation followed by a XOR with 0x1b
+ */
+function mixColumns(state)
+{
+	for(let i = 0; i < Nb; i++)
+	{
+		let s0 = state[i*4];
+		let s1 = state[i*4 + 1];
+		let s2 = state[i*4 + 2];
+		let s3 = state[i*4 + 3];
+
+		let sprime0 = mul(s0, 2) ^ mul(s1, 3) ^ s2 ^ s3;
+		let sprime1 = s0 ^ mul(s1, 2) ^ mul(s2, 3) ^ s3;
+		let sprime2 = s0 ^ s1 ^ mul(s2, 2) ^ mul(s3, 3);
+		let sprime3 = mul(s0, 3) ^ s1 ^ s2 ^ mul(s3, 2);
+
+		state[i*4] = sprime0;
+		state[i*4 + 1] = sprime1;
+		state[i*4 + 2] = sprime2;
+		state[i*4 + 3] = sprime3;
+	}
+}
+
+
+function subWord(w)
+{
+	w = (SBox[((w >> 24) >> 4) & 0xF][(w >> 24) & 0xF]) << 24 +
+		(SBox[((w >> 24) >> 4) & 0xF][(w >> 24) & 0xF]) << 16 +
+		(SBox[((w >> 24) >> 4) & 0xF][(w >> 24) & 0xF]) << 8  +
+		(SBox[((w >> 24) >> 4) & 0xF][(w >> 24) & 0xF]);
+
+	return w;
+}
+
+function rotWord(w)
+{
+	w = ((w >> 24) & 0xFF) +
+		(((w >> 16) & 0xFF) << 24) +
+		(((w >> 8) & 0xFF) << 16) +
+		((w & 0xFF) << 8);
+
+	return w;
+}
+
+function Rcon(i)
+{
+	//get 2^(i-1)
+	let expVal = 1;
+	for(let j = 0; j < i - 1; j++)
+		expVal = expVal << 1;
+
+	//Shift to first byte
+	expVal = expVal << 24;
+
+	return expVal;
+}	
+
+
+/*
+ * Encrypt 128-bit plaintext using an expanded key
+ */
+function cipher(inArr, wArr)
+{
+	//Four byte state array based on input
+	let state = inArr;
+
+	state = addRoundKey(state, wArr.slice(0, Nb));
+
+	for(let round = 1; round < Nr; round++)
+	{
+		state = subBytes(state);
+		state = shiftRows(state);
+		state = mixColumns(state);
+		state = addRoundKey(state, wArr.slice(round*Nb, (round + 1) * Nb));
+	}
+
+	state = subBytes(state);
+	state = shiftRows(state);
+	state = addRoundKey(state, wArr.slice(Nr*Nb, (Nr + 1) * Nb));
+
+	return state;
+}
+
+/*
+ * Expand a 4*Nk byte key to an array of Nb*(Nr+1) words
+ */
+function KeyExpansion(key)
+{
+	var w = [];
+
+	//Temporary word used for each word calculation
+	let temp = 0;
+
+	//Build a new word for every 4 bytes
+	for(let i = 0; i < Nk; i++)
+	{
+		w[i] = ((key[4*i] << 24) & 0xFF000000) + ((key[4*i + 1] << 16) & 0xFF0000) + 
+			((key[4*i + 2] << 8) & 0xFF00) + ((key[4*i + 3]) & 0xFF); 
+	}
+
+	for(let i = Nk; i < Nb * (Nr+1); i++)
+	{
+		temp = w[i-1];
+
+		if(i%Nk == 0)
+			temp = subWord(rotWord(temp)) ^ Rcon(i/Nk);
+		else if (Nk > 6 && i%Nk == 4)
+			temp = subWord(temp);
+
+		w[i] = w[i-Nk] ^ temp;
+	}
 }
 
 var AESObj = 
 {
-	cipher : function(inArr, wArr)
+	/*
+	 *	Take in plain text of variable length and return
+	 *	the 256-bit AES encrypted array as an 8-bit integer array
+	 */
+	encrypt : function(plaintext)
 	{
-		//Four byte state array based on input
-		let state = inArr;
 
-		state = _addRoundKey(state, wArr.slice(0, Nb));
+	},
 
-		for(let round = 1; round < Nr; round++)
-		{
-			state = _subBytes(state);
-			state = _shiftRows(state);
-			state = _mixColumns(state);
-			state = _addRoundKey(state, wArr.slice(round*Nb, (round + 1) * Nb));
-		}
+	/*
+	 * Take in a variable length 8-bit int array and return
+	 * the plaintext as a string
+	 */
+	decrypt : function(encrypted)
+	{
 
-		state = _subBytes(state);
-		state = _shiftRows(state);
-		state = _addRoundKey(state, wArr.slice(Nr*Nb, (Nr + 1) * Nb));
-
-		return state;
 	}
-
-
-
 };
 
 
