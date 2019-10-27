@@ -1,6 +1,6 @@
-var Nk = 8;
+var Nk = 4;
 var Nb = 4;
-var Nr = 14;
+var Nr = 10;
 
 var SBox = [
 	[0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76],
@@ -128,11 +128,11 @@ function mixColumns(state)
 
 
 function subWord(w)
-{
-	w = (SBox[((w >> 24) >> 4) & 0xF][(w >> 24) & 0xF]) << 24 +
-		(SBox[((w >> 24) >> 4) & 0xF][(w >> 24) & 0xF]) << 16 +
-		(SBox[((w >> 24) >> 4) & 0xF][(w >> 24) & 0xF]) << 8  +
-		(SBox[((w >> 24) >> 4) & 0xF][(w >> 24) & 0xF]);
+{		
+	w = (SBox[((w >> 24) >> 4) & 0xF][(w >> 24) & 0xF] << 24) +
+		(SBox[((w >> 16) >> 4) & 0xF][(w >> 16) & 0xF] << 16) +
+		(SBox[((w >> 8) >> 4) & 0xF][(w >> 8) & 0xF] << 8)  +
+		(SBox[((w) >> 4) & 0xF][(w) & 0xF]);
 
 	return w;
 }
@@ -214,31 +214,92 @@ function KeyExpansion(key)
 
 		w[i] = w[i-Nk] ^ temp;
 	}
+
+	return w;
 }
 
-var AESObj = 
+var AES128 = 
 {
 	/*
-	 *	Take in plain text of variable length and return
-	 *	the 256-bit AES encrypted array as an 8-bit integer array
+	 * Take in plain text of variable length and an 8-bit integer array key 
+	 * of variable length and return the 128-bit AES encrypted array as an 
+	 * 8-bit integer array
 	 */
-	encrypt : function(plaintext)
+	encrypt : function(plaintext, key)
 	{
+		Nk = 4;
+		Nb = 4;
+		Nr = 10;
 
 	},
 
 	/*
-	 * Take in a variable length 8-bit int array and return
-	 * the plaintext as a string
+	 * Take in a variable length 8-bit int array and an 8-bit integer array 
+	 * key of variable length and return the resulting plaintext as a string
 	 */
-	decrypt : function(encrypted)
+	decrypt : function(encrypted, key)
 	{
-
+		Nk = 4;
+		Nb = 4;
+		Nr = 10;
 	}
 };
 
 
+var AES192 = 
+{
+	/*
+	 * Take in plain text of variable length and an 8-bit integer array key 
+	 * of variable length and return the 128-bit AES encrypted array as an 
+	 * 8-bit integer array
+	 */
+	encrypt : function(plaintext, key)
+	{
+		Nk = 6;
+		Nb = 4;
+		Nr = 12;
 
-let in = new Uint8Array(new ArrayBuffer(4));
+	},
 
-module.exports = AESObj;
+	/*
+	 * Take in a variable length 8-bit int array and an 8-bit integer array 
+	 * key of variable length and return the resulting plaintext as a string
+	 */
+	decrypt : function(encrypted, key)
+	{
+		Nk = 6;
+		Nb = 4;
+		Nr = 12;
+	}
+};
+
+
+var AES256 = 
+{
+	/*
+	 * Take in plain text of variable length and an 8-bit integer array key 
+	 * of variable length and return the 128-bit AES encrypted array as an 
+	 * 8-bit integer array
+	 */
+	encrypt : function(plaintext, key)
+	{
+		Nk = 8;
+		Nb = 4;
+		Nr = 14;
+
+	},
+
+	/*
+	 * Take in a variable length 8-bit int array and an 8-bit integer array 
+	 * key of variable length and return the resulting plaintext as a string
+	 */
+	decrypt : function(encrypted, key)
+	{
+		Nk = 8;
+		Nb = 4;
+		Nr = 14;
+	}
+};
+
+
+//let in = new Uint8Array(new ArrayBuffer(4));
