@@ -1,0 +1,49 @@
+<!--Author: Lena Voytek-->
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>Encryption Tester</title>
+		<link href="style.css" rel="stylesheet">
+
+		<script src="aesBlackboxTesting.js" defer></script>
+		<script src="aesWhiteboxTesting.js" defer></script>
+		<script src="../lenAES.js"></script>
+		
+	</head>
+	
+	<body>
+		<div class="form">
+			<h1>AES Encryption Test</h1>
+			<div>
+				<label for="plaintext">Plain Text</label>
+				<input type="text" name="plaintext" id="plaintext" />
+			</div>
+			
+			<div>
+				<label for="hexkeystring">Key in Hexidecimal</label>
+				<input type="text" name="hexkeystring" id="hexkeystring" />
+			</div>
+
+			<div>
+				<label for="encryptedhexstring">Encrypted Hex</label>
+				<input type="text" name="encryptedhexstring" id="encryptedhexstring" readonly />
+			</div>
+
+			<div>
+				<label for="plaintextresult">Plain Text Result</label>
+				<input type="text" name="plaintextresult" id="plaintextresult" readonly />
+			</div>
+
+			<div id="formErrors"></div>
+
+			<div>
+				<input type="submit" name="process" id="process" value="Process"/>
+			</div>
+		</div>
+
+		<div id="unittests">
+		</div>
+	</body>
+</html>
