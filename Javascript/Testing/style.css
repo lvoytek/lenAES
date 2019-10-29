@@ -65,7 +65,7 @@ input[type=submit]
 
 .success
 {
-	width: 400%;
+	width: 500%;
 	margin-top: 10px;
 	margin-bottom: 10px;
 	background-color: lightgreen;
@@ -76,7 +76,7 @@ input[type=submit]
 
 .failure
 {
-	width: 400%;
+	width: 500%;
 	margin-top: 10px;
 	margin-bottom: 10px;
 	background-color: red;

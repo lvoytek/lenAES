@@ -28,10 +28,10 @@ function addRoundKey(state, word)
 {
 	for(let c = 0; c < Nb; c++)
 	{
-		state[c * Nb] = state[c * Nb] ^ word[0];
-		state[c * Nb + 1] = state[c * Nb + 1] ^ word[1];
-		state[c * Nb + 2] = state[c * Nb + 2] ^ word[2];
-		state[c * Nb + 3] = state[c * Nb + 3] ^ word[3];
+		state[c * Nb] = (state[c * Nb] ^ ((word[c] >> 24) & 0XFF));
+		state[c * Nb + 1] = (state[c * Nb + 1] ^ ((word[c] >> 16)& 0xFF));
+		state[c * Nb + 2] = (state[c * Nb + 2] ^ ((word[c] >> 8) & 0xFF));
+		state[c * Nb + 3] = (state[c * Nb + 3] ^ (word[c] & 0xFF));
 	}
 
 	return state;
@@ -59,10 +59,12 @@ function shiftRows(state)
 		for(let shiftNum = 0; shiftNum < i; shiftNum++)
 		{
 			temp = state[i];
-			for(let shiftLoc = 0; shiftLoc < Nb - 1; shiftLoc++)
+
+			let shiftLoc = 0;
+			for(shiftLoc = 0; shiftLoc < Nb - 1; shiftLoc++)
 				state[i + shiftLoc * 4] = state[i + (shiftLoc + 1) * 4];
 
-			state[i + shiftLoc*(Nb - 1)] = temp;
+			state[i + (Nb - 1) * 4] = temp;
 		}
 	}
 
@@ -74,7 +76,10 @@ function shiftRows(state)
  */
 function mul(s1, scalar)
 {
-	let product = 0;
+	if(scalar == 1)
+		return s1;
+
+	let product = s1;
 
 	//Reduce the scalar until it reaches 0 or 1, multiplying by 2 each time
 	while(scalar > 1)
@@ -83,8 +88,10 @@ function mul(s1, scalar)
 		product = product << 1;
 
 		//Will overflow, necessary to XOR with 1b
-		if((s1 >> 7 & 1) == 1)
+		if((product >> 8 & 1) == 1)
 			product ^= 0x1b;
+
+		product &= 0xFF;
 
 		scalar -= 2;
 	}
@@ -124,6 +131,8 @@ function mixColumns(state)
 		state[i*4 + 2] = sprime2;
 		state[i*4 + 3] = sprime3;
 	}
+
+	return state;
 }
 
 
@@ -152,7 +161,15 @@ function Rcon(i)
 	//get 2^(i-1)
 	let expVal = 1;
 	for(let j = 0; j < i - 1; j++)
+	{
 		expVal = expVal << 1;
+
+		//XOR if too large
+		if((expVal >> 8) & 1)
+			expVal ^= 0x1b;
+	}
+
+
 
 	//Shift to first byte
 	expVal = expVal << 24;
@@ -166,13 +183,14 @@ function Rcon(i)
  */
 function cipher(inArr, wArr)
 {
-	//Four byte state array based on input
+	//Nb * Four byte state array based on input
 	let state = inArr;
 
 	state = addRoundKey(state, wArr.slice(0, Nb));
 
 	for(let round = 1; round < Nr; round++)
 	{
+		
 		state = subBytes(state);
 		state = shiftRows(state);
 		state = mixColumns(state);
@@ -183,6 +201,29 @@ function cipher(inArr, wArr)
 	state = shiftRows(state);
 	state = addRoundKey(state, wArr.slice(Nr*Nb, (Nr + 1) * Nb));
 
+	return state;
+}
+
+/*
+ * Decrypt a 128-bit byte array using an expanded key
+ */
+function invCipher(inArr, wArr)
+{
+	let state = inArr;
+
+	state = addRoundKey(state, wArr.slice(Nr*Nb, (Nr+1)*Nb));
+
+	for(let round = Nr-1; round >= 1; round--)
+	{
+		state = invShiftRows(state);
+		state = invSubBytes(state);
+		state = addRoundKey(state, w.slice(round*Nb, (round+1)*Nb));
+		state = invMixColumns(state);
+	}
+
+	state = invShiftRows(state);
+	state = invSubBytes(state);
+	state = addRoundKey(state, w.slice(0, Nb));
 	return state;
 }
 
@@ -221,8 +262,8 @@ function KeyExpansion(key)
 var AES128 = 
 {
 	/*
-	 * Take in plain text of variable length and an 8-bit integer array key 
-	 * of variable length and return the 128-bit AES encrypted array as an 
+	 * Take in plain text of variable length and a 128-bit byte array key 
+	 * and return the 128-bit AES encrypted array as an 
 	 * 8-bit integer array
 	 */
 	encrypt : function(plaintext, key)
@@ -231,14 +272,51 @@ var AES128 =
 		Nb = 4;
 		Nr = 10;
 
+		//Key too small return null, key truncated when too large
+		if(key.length < Nk*4)
+			return null;
+
+		//Convert to ascii vals
+		plaintextArray = plaintext.split("");
+		for(let i = 0; i < plaintextArray.length; i++)
+			plaintextArray[i] = plaintextArray[i].charCodeAt(0);
+
+		//Expand the key
+		let expandedKey = KeyExpansion(key);
+
+		//Get first 128 bits of plaintext encrypted
+		let encryptedTotal = cipher(plaintextArray.slice(0, Nb*4), expandedKey);
+
+		//Split plaintext up into 128-bit (Nb*4*8bit) chunks and encrypt each
+		let i = Nb*4;
+		while(i + Nb*4 < plaintext.length)
+		{
+			encryptedTotal = encryptedTotal.concat(cipher(plaintextArray.slice(i, i + Nb*4), expandedKey));
+			i += Nb*4;
+		}
+
+		//Add FF bytes to the end
+		if(i < plaintext.length)
+		{
+			for(let j = i; j < (Nb*4-plaintext.length); j++)
+				plaintext.push(String.fromCharCode(0xFF));
+
+			//Add last set
+			encryptedTotal = encryptedTotal.concat(cipher(plaintextArray.slice(i, i + Nb*4), expandedKey));			
+		}
+
+		return encryptedTotal;
 	},
 
 	/*
-	 * Take in a variable length 8-bit int array and an 8-bit integer array 
-	 * key of variable length and return the resulting plaintext as a string
+	 * Take in a variable length byte array and a 128-bit byte array
+	 * key and return the resulting plaintext as a string
 	 */
 	decrypt : function(encrypted, key)
 	{
+		if(key.length < Nk*4)
+			return null;
+
 		Nk = 4;
 		Nb = 4;
 		Nr = 10;
@@ -249,8 +327,8 @@ var AES128 =
 var AES192 = 
 {
 	/*
-	 * Take in plain text of variable length and an 8-bit integer array key 
-	 * of variable length and return the 128-bit AES encrypted array as an 
+	 * Take in plain text of variable length and a 192-bit byte array key 
+	 * and return the 128-bit AES encrypted array as an 
 	 * 8-bit integer array
 	 */
 	encrypt : function(plaintext, key)
@@ -259,14 +337,53 @@ var AES192 =
 		Nb = 4;
 		Nr = 12;
 
+
+		//Key too small return null, key truncated when too large
+		if(key.length < Nk*4)
+			return null;
+
+		//Convert to ascii vals
+		plaintextArray = plaintext.split("");
+		for(let i = 0; i < plaintextArray.length; i++)
+			plaintextArray[i] = plaintextArray[i].charCodeAt(0);
+
+		//Expand the key
+		let expandedKey = KeyExpansion(key);
+
+		//Get first 128 bits of plaintext encrypted
+		let encryptedTotal = cipher(plaintextArray.slice(0, Nb*4), expandedKey);
+
+		//Split plaintext up into 128-bit (Nb*4*8bit) chunks and encrypt each
+		let i = Nb*4;
+		while(i + Nb*4 < plaintext.length)
+		{
+			encryptedTotal = encryptedTotal.concat(cipher(plaintextArray.slice(i, i + Nb*4), expandedKey));
+			i += Nb*4;
+		}
+
+		//Add FF bytes to the end
+		if(i < plaintext.length)
+		{
+			for(let j = i; j < (Nb*4-plaintext.length); j++)
+				plaintext.push(String.fromCharCode(0xFF));
+
+			//Add last set
+			encryptedTotal = encryptedTotal.concat(cipher(plaintextArray.slice(i, i + Nb*4), expandedKey));			
+		}
+
+		return encryptedTotal;
+
 	},
 
 	/*
-	 * Take in a variable length 8-bit int array and an 8-bit integer array 
-	 * key of variable length and return the resulting plaintext as a string
+	 * Take in a variable length byte array and a 192-bit byte array
+	 * key and return the resulting plaintext as a string
 	 */
 	decrypt : function(encrypted, key)
 	{
+		if(key.length < Nk*4)
+			return null;
+
 		Nk = 6;
 		Nb = 4;
 		Nr = 12;
@@ -277,8 +394,8 @@ var AES192 =
 var AES256 = 
 {
 	/*
-	 * Take in plain text of variable length and an 8-bit integer array key 
-	 * of variable length and return the 128-bit AES encrypted array as an 
+	 * Take in plain text of variable length and a 256-bit byte array key 
+	 * and return the 128-bit AES encrypted array as an 
 	 * 8-bit integer array
 	 */
 	encrypt : function(plaintext, key)
@@ -287,19 +404,55 @@ var AES256 =
 		Nb = 4;
 		Nr = 14;
 
+
+		//Key too small return null, key truncated when too large
+		if(key.length < Nk*4)
+			return null;
+
+		//Convert to ascii vals
+		plaintextArray = plaintext.split("");
+		for(let i = 0; i < plaintextArray.length; i++)
+			plaintextArray[i] = plaintextArray[i].charCodeAt(0);
+
+		//Expand the key
+		let expandedKey = KeyExpansion(key);
+
+		//Get first 128 bits of plaintext encrypted
+		let encryptedTotal = cipher(plaintextArray.slice(0, Nb*4), expandedKey);
+
+		//Split plaintext up into 128-bit (Nb*4*8bit) chunks and encrypt each
+		let i = Nb*4;
+		while(i + Nb*4 < plaintext.length)
+		{
+			encryptedTotal = encryptedTotal.concat(cipher(plaintextArray.slice(i, i + Nb*4), expandedKey));
+			i += Nb*4;
+		}
+
+		//Add FF bytes to the end
+		if(i < plaintext.length)
+		{
+			for(let j = i; j < (Nb*4-plaintext.length); j++)
+				plaintext.push(String.fromCharCode(0xFF));
+
+			//Add last set
+			encryptedTotal = encryptedTotal.concat(cipher(plaintextArray.slice(i, i + Nb*4), expandedKey));			
+		}
+
+		return encryptedTotal;
+
 	},
 
 	/*
-	 * Take in a variable length 8-bit int array and an 8-bit integer array 
-	 * key of variable length and return the resulting plaintext as a string
+	 * Take in a variable length byte array and a 256-bit byte array
+	 * key and return the resulting plaintext as a string
 	 */
 	decrypt : function(encrypted, key)
 	{
+		if(key.length < Nk*4)
+			return null;
+
 		Nk = 8;
 		Nb = 4;
 		Nr = 14;
 	}
 };
-
-
-//let in = new Uint8Array(new ArrayBuffer(4));
