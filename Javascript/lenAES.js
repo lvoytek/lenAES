@@ -154,8 +154,6 @@ function mul(s1, scalar)
 		if((product >> 8 & 1) == 1)
 			product ^= 0x1b;
 
-		product &= 0xFF;
-
 		scalar -= 2;
 	}
 
@@ -184,10 +182,10 @@ function mixColumns(state)
 		let s2 = state[i*4 + 2];
 		let s3 = state[i*4 + 3];
 
-		let sprime0 = mul(s0, 2) ^ mul(s1, 3) ^ s2 ^ s3;
-		let sprime1 = s0 ^ mul(s1, 2) ^ mul(s2, 3) ^ s3;
-		let sprime2 = s0 ^ s1 ^ mul(s2, 2) ^ mul(s3, 3);
-		let sprime3 = mul(s0, 3) ^ s1 ^ s2 ^ mul(s3, 2);
+		let sprime0 = mul(s0, 2) ^ mul(s1, 3) ^ s2 		   ^ s3;
+		let sprime1 = s0 		 ^ mul(s1, 2) ^ mul(s2, 3) ^ s3;
+		let sprime2 = s0 		 ^ s1		  ^ mul(s2, 2) ^ mul(s3, 3);
+		let sprime3 = mul(s0, 3) ^ s1 		  ^ s2 		   ^ mul(s3, 2);
 
 		state[i*4] = sprime0;
 		state[i*4 + 1] = sprime1;
@@ -217,6 +215,8 @@ function invMixColumns(state)
 		let sprime1 = mul(s0, 0x9) ^ mul(s1, 0xe) ^ mul(s2, 0xb) ^ mul(s3, 0xd);
 		let sprime2 = mul(s0, 0xd) ^ mul(s1, 0x9) ^ mul(s2, 0xe) ^ mul(s3, 0xb);
 		let sprime3 = mul(s0, 0xb) ^ mul(s1, 0xd) ^ mul(s2, 0x9) ^ mul(s3, 0xe);
+
+		console.log(decimalToHexString(mul(0x1, 0x09)));
 
 		state[i*4] = sprime0;
 		state[i*4 + 1] = sprime1;
@@ -308,13 +308,13 @@ function invCipher(inArr, wArr)
 	{
 		state = invShiftRows(state);
 		state = invSubBytes(state);
-		state = addRoundKey(state, w.slice(round*Nb, (round+1)*Nb));
+		state = addRoundKey(state, wArr.slice(round*Nb, (round+1)*Nb));
 		state = invMixColumns(state);
 	}
 
 	state = invShiftRows(state);
 	state = invSubBytes(state);
-	state = addRoundKey(state, w.slice(0, Nb));
+	state = addRoundKey(state, wArr.slice(0, Nb));
 	return state;
 }
 

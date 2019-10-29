@@ -121,6 +121,15 @@ document.addEventListener("DOMContentLoaded", function(event)
 		getHexArrayAsString([0x63, 0x16, 0x18, 0xed]),
 		getHexArrayAsString(out));
 
+	//Inverse Sub-Bytes function
+	Nb = 1;
+	state = [0x63, 0x16, 0x18, 0xed];
+	tki = getHexArrayAsString(state);
+	out = invSubBytes(state);
+	createUnitTestView("Inverse Sub-Bytes", tki,
+		getHexArrayAsString([0x00, 0xFF, 0x34, 0x53]),
+		getHexArrayAsString(out));
+
 	//Test addRoundKey
 	Nb = 4;
 	state = [0x32, 0x43, 0xf6, 0xa8, 0x88, 0x5a, 0x30, 0x8d, 0x31, 0x31, 0x98, 0xa2, 0xe0, 0x37, 0x07, 0x34];
@@ -158,6 +167,15 @@ document.addEventListener("DOMContentLoaded", function(event)
 		getHexArrayAsString([0x04, 0x66, 0x81, 0xe5, 0xe0, 0xcb, 0x19, 0x9a, 0x48, 0xf8, 0xd3, 0x7a, 0x28, 0x06, 0x26, 0x4c]),
 		getHexArrayAsString(out));
 
+	//Inverse mixColumns
+	Nb = 4;
+	state = [0x04, 0x66, 0x81, 0xe5, 0xe0, 0xcb, 0x19, 0x9a, 0x48, 0xf8, 0xd3, 0x7a, 0x28, 0x06, 0x26, 0x4c];
+	tki = getHexArrayAsString(state);
+	out = invMixColumns(state);
+	createUnitTestView("Inverse Mix Columns", tki,
+		getHexArrayAsString([0xd4, 0xbf, 0x5d, 0x30, 0xe0, 0xb4, 0x52, 0xae, 0xb8, 0x41, 0x11, 0xf1, 0x1e, 0x27, 0x98, 0xe5]),
+		getHexArrayAsString(out));
+
 	//AES-128 Encrypt
 	plaintext = getASCIIFromHexArray(getStringAsHexArray("00112233445566778899aabbccddeeff"));
 	keyIn = getStringAsHexArray("000102030405060708090a0b0c0d0e0f");
@@ -181,4 +199,13 @@ document.addEventListener("DOMContentLoaded", function(event)
 	createUnitTestView("AES256 Encrypt", plaintext,
 		getHexArrayAsString(getStringAsHexArray("8ea2b7ca516745bfeafc49904b496089")),
 		getHexArrayAsString(encrypted));
+
+	//AES-128 Decrypt
+	encrypted = getStringAsHexArray("69c4e0d86a7b0430d8cdb78070b4c55a");
+	tki = getHexArrayAsString(encrypted);
+	keyIn = getStringAsHexArray("000102030405060708090a0b0c0d0e0f");
+	plaintext = AES128.decrypt(encrypted, keyIn);
+	createUnitTestView("AES128 Decrypt", tki,
+		getASCIIFromHexArray(getStringAsHexArray("00112233445566778899aabbccddeeff")),
+		plaintext);
 });
