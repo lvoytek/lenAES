@@ -135,31 +135,46 @@ function invShiftRows(state)
 }
 
 /*
- * 8-bit Polynomial multiplication used for mixColumns
+ * 8-bit Polynomial multiplication used for mixColumns and invMixColumns
+ * Works for scalar up to 0xFF
  */
 function mul(s1, scalar)
 {
+	//Base case of 1: send the original value
 	if(scalar == 1)
 		return s1;
 
-	let product = s1;
-
-	//Reduce the scalar until it reaches 0 or 1, multiplying by 2 each time
-	while(scalar > 1)
+	//Base case of 2: multiply by 2 and xor if needed
+	if(scalar == 2)
 	{
-		//Multiply
-		product = product << 1;
+		let needsMod = ((s1 >> 7 & 1) == 1);
 
-		//Will overflow, necessary to XOR with 1b
-		if((product >> 8 & 1) == 1)
-			product ^= 0x1b;
-
-		scalar -= 2;
+		if(needsMod)
+			return ((s1 << 1) ^ 0x1b) & 0xFF;
+		else
+			return (s1 << 1) & 0xFF;
 	}
 
-	//Add one more copy
-	if(scalar == 1)
-		product = product ^ s1;
+	//Cases of powers of 2 (4, 8, 16)
+	for(let i = 2; i < 5; i++)
+	{
+		if(scalar == 2**i)
+		{
+			return mul(mul(s1, 2**(i-1)), 2);
+		}
+	}
+
+	let product = 0;
+
+	//Reduce at each power of 2 starting at 0x10
+	for(let i = 4; i >= 0; i--)
+	{
+		if(scalar >= 2**i)
+		{
+			scalar -= 2**i;
+			product ^= mul(s1, 2**i);
+		}
+	}
 
 	//Confirm 8-bit
 	product &= 0xFF;
@@ -215,8 +230,6 @@ function invMixColumns(state)
 		let sprime1 = mul(s0, 0x9) ^ mul(s1, 0xe) ^ mul(s2, 0xb) ^ mul(s3, 0xd);
 		let sprime2 = mul(s0, 0xd) ^ mul(s1, 0x9) ^ mul(s2, 0xe) ^ mul(s3, 0xb);
 		let sprime3 = mul(s0, 0xb) ^ mul(s1, 0xd) ^ mul(s2, 0x9) ^ mul(s3, 0xe);
-
-		console.log(decimalToHexString(mul(0x1, 0x09)));
 
 		state[i*4] = sprime0;
 		state[i*4 + 1] = sprime1;
