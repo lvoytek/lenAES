@@ -208,4 +208,22 @@ document.addEventListener("DOMContentLoaded", function(event)
 	createUnitTestView("AES128 Decrypt", tki,
 		getASCIIFromHexArray(getStringAsHexArray("00112233445566778899aabbccddeeff")),
 		plaintext);
+
+	//AES-192 Decrypt
+	encrypted = getStringAsHexArray("dda97ca4864cdfe06eaf70a0ec0d7191");
+	tki = getHexArrayAsString(encrypted);
+	keyIn = getStringAsHexArray("000102030405060708090a0b0c0d0e0f1011121314151617");
+	plaintext = AES192.decrypt(encrypted, keyIn);
+	createUnitTestView("AES192 Decrypt", tki,
+		getASCIIFromHexArray(getStringAsHexArray("00112233445566778899aabbccddeeff")),
+		plaintext);
+
+	//AES-256 Decrypt
+	encrypted = getStringAsHexArray("8ea2b7ca516745bfeafc49904b496089");
+	tki = getHexArrayAsString(encrypted);
+	keyIn = getStringAsHexArray("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+	plaintext = AES256.decrypt(encrypted, keyIn);
+	createUnitTestView("AES256 Decrypt", tki,
+		getASCIIFromHexArray(getStringAsHexArray("00112233445566778899aabbccddeeff")),
+		plaintext);
 });
