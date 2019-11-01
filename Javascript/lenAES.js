@@ -399,11 +399,11 @@ var AES128 =
 			i += Nb*4;
 		}
 
-		//Add FF bytes to the end
+		//Add 0x0 bytes to the end
 		if(i < plaintext.length)
 		{
 			for(let j = i; j < (Nb*4-plaintext.length); j++)
-				plaintext.push(String.fromCharCode(0xFF));
+				plaintext.push(String.fromCharCode(0x00));
 
 			//Add last set
 			encryptedTotal = encryptedTotal.concat(cipher(plaintextArray.slice(i, i + Nb*4), expandedKey));			
@@ -434,16 +434,16 @@ var AES128 =
 
 		//Split plaintext up into 128-bit (Nb*4*8bit) chunks and decrypt each
 		let i = Nb*4;
-		while(i + Nb*4 < plaintext.length)
+		while(i < encrypted.length)
 		{
-			decryptedTotal = decryptedTotal.concat(invCipher(plaintextArray.slice(i, i + Nb*4), expandedKey));
+			decryptedTotal = decryptedTotal.concat(invCipher(encrypted.slice(i, i + Nb*4), expandedKey));
 			i += Nb*4;
 		}
 
 		//Remove FF
-		for(let i = decryptedTotal.length - 1; i <= decryptedTotal.length - Nb*4; i--)
+		for(let i = decryptedTotal.length - 1; i >= decryptedTotal.length - Nb*4; i--)
 		{
-			if(decryptedTotal[i] == 0xFF)
+			if(decryptedTotal[i] == 0)
 				decryptedTotal.pop();
 			else
 				break;
@@ -515,7 +515,7 @@ var AES192 =
 		Nb = 4;
 		Nr = 12;
 	
-		//Key too small return null, key truncated when too large
+				//Key too small return null, key truncated when too large
 		if(key.length < Nk*4)
 			return null;
 
@@ -527,16 +527,16 @@ var AES192 =
 
 		//Split plaintext up into 128-bit (Nb*4*8bit) chunks and decrypt each
 		let i = Nb*4;
-		while(i + Nb*4 < plaintext.length)
+		while(i < encrypted.length)
 		{
-			decryptedTotal = decryptedTotal.concat(invCipher(plaintextArray.slice(i, i + Nb*4), expandedKey));
+			decryptedTotal = decryptedTotal.concat(invCipher(encrypted.slice(i, i + Nb*4), expandedKey));
 			i += Nb*4;
 		}
 
 		//Remove FF
-		for(let i = decryptedTotal.length - 1; i <= decryptedTotal.length - Nb*4; i--)
+		for(let i = decryptedTotal.length - 1; i >= decryptedTotal.length - Nb*4; i--)
 		{
-			if(decryptedTotal[i] == 0xFF)
+			if(decryptedTotal[i] == 0)
 				decryptedTotal.pop();
 			else
 				break;
@@ -608,7 +608,7 @@ var AES256 =
 		Nb = 4;
 		Nr = 14;
 
-		//Key too small return null, key truncated when too large
+				//Key too small return null, key truncated when too large
 		if(key.length < Nk*4)
 			return null;
 
@@ -620,16 +620,16 @@ var AES256 =
 
 		//Split plaintext up into 128-bit (Nb*4*8bit) chunks and decrypt each
 		let i = Nb*4;
-		while(i + Nb*4 < plaintext.length)
+		while(i < encrypted.length)
 		{
-			decryptedTotal = decryptedTotal.concat(invCipher(plaintextArray.slice(i, i + Nb*4), expandedKey));
+			decryptedTotal = decryptedTotal.concat(invCipher(encrypted.slice(i, i + Nb*4), expandedKey));
 			i += Nb*4;
 		}
 
 		//Remove FF
-		for(let i = decryptedTotal.length - 1; i <= decryptedTotal.length - Nb*4; i--)
+		for(let i = decryptedTotal.length - 1; i >= decryptedTotal.length - Nb*4; i--)
 		{
-			if(decryptedTotal[i] == 0xFF)
+			if(decryptedTotal[i] == 0)
 				decryptedTotal.pop();
 			else
 				break;
