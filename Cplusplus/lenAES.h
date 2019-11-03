@@ -112,7 +112,7 @@ private:
 	void keyExpansion(unsigned char * expandedKey, unsigned char * key);
 
 	void generalEncrypt(unsigned char * output, char * plaintext, unsigned char * key);
-	void generalEncrypt(char * plaintext, unsigned char * input, unsigned char * key);
+	void generalDecrypt(char * plaintext, unsigned char * input, unsigned char * key);
 
 public:
 	/*
