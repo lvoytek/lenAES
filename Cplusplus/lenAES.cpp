@@ -75,37 +75,61 @@ void AES::generalEncrypt(unsigned char * output, char * plaintext, unsigned char
 
 }
 
-void AES::generalEncrypt(char * plaintext, unsigned char * input, unsigned char * key)
+void AES::generalDecrypt(char * plaintext, unsigned char * input, unsigned char * key)
 {
 
 }
 
 void AES::aes128Encrypt(unsigned char * output, char * plaintext, unsigned char * key)
 {
+	this->Nk = 4;
+	this->Nb = 4;
+	this->Nr = 10;
 
+	this->generalEncrypt(output, plaintext, key);
 }
 
 void AES::aes192Encrypt(unsigned char * output, char * plaintext, unsigned char * key)
 {
+	this->Nk = 6;
+	this->Nb = 4;
+	this->Nr = 12;
 
+	this->generalEncrypt(output, plaintext, key);
 }
 
 void AES::aes256Encrypt(unsigned char * output, char * plaintext, unsigned char * key)
 {
+	this->Nk = 8;
+	this->Nb = 4;
+	this->Nr = 14;
 
+	this->generalEncrypt(output, plaintext, key);
 }
 
 void AES::aes128Decrypt(char * plaintext, unsigned char * input, unsigned char * key)
 {
+	this->Nk = 4;
+	this->Nb = 4;
+	this->Nr = 10;
 
+	this->generalDecrypt(plaintext, input, key);
 }
 
 void AES::aes192Decrypt(char * plaintext, unsigned char * input, unsigned char * key)
 {
+	this->Nk = 6;
+	this->Nb = 4;
+	this->Nr = 12;
 
+	this->generalDecrypt(plaintext, input, key);
 }
 
 void AES::aes256Decrypt(char * plaintext, unsigned char * input, unsigned char * key)
 {
+	this->Nk = 8;
+	this->Nb = 4;
+	this->Nr = 14;
 
+	this->generalDecrypt(plaintext, input, key);
 }

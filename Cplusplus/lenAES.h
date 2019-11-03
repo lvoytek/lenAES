@@ -109,7 +109,7 @@ private:
 	/*
 	 * Expand a 4*Nk byte key to an array of Nb*(Nr+1) words
 	 */
-	void KeyExpansion(unsigned char * expandedKey, unsigned char * key);
+	void keyExpansion(unsigned char * expandedKey, unsigned char * key);
 
 	void generalEncrypt(unsigned char * output, char * plaintext, unsigned char * key);
 	void generalEncrypt(char * plaintext, unsigned char * input, unsigned char * key);
