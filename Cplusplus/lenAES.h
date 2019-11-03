@@ -1,6 +1,6 @@
 #ifndef LENAES_H
 #define LENAES_H
-unsigned int SBox = {
+const unsigned int SBox[][] = {
 	{0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76},
 	{0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0},
 	{0xb7, 0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1, 0x71, 0xd8, 0x31, 0x15},
@@ -19,7 +19,7 @@ unsigned int SBox = {
 	{0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16}
 };
 
-unsigned int ISBox = {
+const unsigned int ISBox[][] = {
 	{0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb},
 	{0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87, 0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb},
 	{0x54, 0x7b, 0x94, 0x32, 0xa6, 0xc2, 0x23, 0x3d, 0xee, 0x4c, 0x95, 0x0b, 0x42, 0xfa, 0xc3, 0x4e},
@@ -38,27 +38,121 @@ unsigned int ISBox = {
 	{0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d}
 };
 
-class AES128
+class AES
 {
 private:
+	int Nk = 4;
 	int Nb = 4;
+	int Nr = 10;
 
-	void addRoundKey(char * state, int * word)
-	{
-		for(int c = 0; c < this->Nb; c++)
-		{
-			state[c * Nb] = (state[c * Nb] ^ ((word[c] >> 24) & 0XFF));
-			state[c * Nb + 1] = (state[c * Nb + 1] ^ ((word[c] >> 16)& 0xFF));
-			state[c * Nb + 2] = (state[c * Nb + 2] ^ ((word[c] >> 8) & 0xFF));
-			state[c * Nb + 3] = (state[c * Nb + 3] ^ (word[c] & 0xFF));
-		}
+	/*
+ 	 * XOR each column of the state with a given word from the key schedule
+ 	 */
+	void addRoundKey(unsigned char * state, int * word);
+	
+	/*
+ 	 * Nonlinear byte by byte substitution using SBox
+ 	 */
+	void subBytes(unsigned char * state);
 
-		return state;
-	};
+	/*
+ 	 * Nonlinear byte by byte substitution using ISBox
+ 	 */
+	void invSubBytes(unsigned char * state);
+
+	/*
+ 	 * Ciclical left shift of each row
+ 	 */
+	void shiftRows(unsigned char * state);
+
+	/*
+ 	 * Ciclical right shift of each row
+ 	 */
+	void invShiftRows(unsigned char * state);
+
+	/*
+	 * Transform each column by treating it as a four-term polynomial and
+	 * multiplying it by a(x) = {03}x^3 + {01}x^2 + {01}x + {02}
+	 *
+	 * Multiplying refers to a normal * operation followed by a XOR with 0x1b
+	 */
+	void mixColumns(unsigned char * state);
+
+	/*
+	 * Inverse Transform each column by treating it as a four-term polynomial and
+	 * multiplying it by a(x) = {03}x^3 + {01}x^2 + {01}x + {02}
+	 *
+	 * Multiplying refers to a normal * operation followed by a XOR with 0x1b
+	 */
+	void invMixColumns(unsigned char * state);
+
+	/*
+	 * 8-bit Polynomial multiplication used for mixColumns and invMixColumns
+	 * Works for scalar up to 0xFF
+	 */
+	unsigned char mul(unsigned char s1, unsigned char scalar);
+
+	unsigned int subWord(unsigned int w);
+	unsigned int rotWord(unsigned int w);
+	unsigned int Rcon(unsigned char i);
+
+	/*
+	 * Encrypt 128-bit plaintext using an expanded key
+	 */
+	void cipher(unsigned char * inArr, unsigned int * wArr);
+	
+	/*
+	 * Decrypt a 128-bit byte array using an expanded key
+	 */
+	void invCipher(unsigned char * inArr, unsigned int * wArr);
+	
+	/*
+	 * Expand a 4*Nk byte key to an array of Nb*(Nr+1) words
+	 */
+	void KeyExpansion(unsigned char * expandedKey, unsigned char * key);
+
+	void generalEncrypt(unsigned char * output, char * plaintext, unsigned char * key);
+	void generalEncrypt(char * plaintext, unsigned char * input, unsigned char * key);
 
 public:
-	AES128();
-	
+	/*
+	 * Take in plain text of variable length and a 128-bit byte array key 
+	 * and return the 128-bit AES encrypted array as an 
+	 * 8-bit integer array
+	 */
+	void aes128Encrypt(unsigned char * output, char * plaintext, unsigned char * key);
+
+	/*
+	 * Take in plain text of variable length and a 192-bit byte array key 
+	 * and return the 128-bit AES encrypted array as an 
+	 * 8-bit integer array
+	 */
+	void aes192Encrypt(unsigned char * output, char * plaintext, unsigned char * key);
+
+	/*
+	 * Take in plain text of variable length and a 256-bit byte array key 
+	 * and return the 128-bit AES encrypted array as an 
+	 * 8-bit integer array
+	 */
+	void aes256Encrypt(unsigned char * output, char * plaintext, unsigned char * key);
+
+	/*
+	 * Take in a variable length byte array and a 128-bit byte array
+	 * key and return the resulting plaintext as a string
+	 */
+	void aes128Decrypt(char * plaintext, unsigned char * input, unsigned char * key);
+
+	/*
+	 * Take in a variable length byte array and a 192-bit byte array
+	 * key and return the resulting plaintext as a string
+	 */
+	void aes192Decrypt(char * plaintext, unsigned char * input, unsigned char * key);
+
+	/*
+	 * Take in a variable length byte array and a 256-bit byte array
+	 * key and return the resulting plaintext as a string
+	 */
+	void aes256Decrypt(char * plaintext, unsigned char * input, unsigned char * key);
 };
 
 #endif
