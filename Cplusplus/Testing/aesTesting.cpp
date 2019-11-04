@@ -72,7 +72,7 @@ bool testDecrypted(char plaintext[])
 
 int main()
 {
-	AES * aes = new AES();
+	AES aes = AES();
 
 	char plaintext[16];
 	unsigned char key[32];
@@ -83,7 +83,7 @@ int main()
 	keyInit(key);
 	encryptedClear(encrypted);
 
-	aes->aes128Encrypt(encrypted, plaintext, key);
+	aes.aes128Encrypt(encrypted, plaintext, key);
 
 	if(test128Encrypted(encrypted))
 		printf("AES 128 Encryption Success\n");
@@ -92,7 +92,7 @@ int main()
 	
 
 	plaintextClear(plaintext);
-	aes->aes128Decrypt(plaintext, encrypted, key);
+	aes.aes128Decrypt(plaintext, encrypted, key);
 
 	if(testDecrypted(plaintext))
 		printf("AES 128 Decryption Success\n");
