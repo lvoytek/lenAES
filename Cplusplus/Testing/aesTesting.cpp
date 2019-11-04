@@ -59,6 +59,51 @@ bool test128Encrypted(unsigned char encrypted[])
 	);
 }
 
+bool test192Encrypted(unsigned char encrypted[])
+{
+	return (
+		encrypted[0x0] == 0xdd &&
+		encrypted[0x1] == 0xa9 &&
+		encrypted[0x2] == 0x7c &&
+		encrypted[0x3] == 0xa4 &&
+		encrypted[0x4] == 0x86 &&
+		encrypted[0x5] == 0x4c &&
+		encrypted[0x6] == 0xdf &&
+		encrypted[0x7] == 0xe0 &&
+		encrypted[0x8] == 0x6e &&
+		encrypted[0x9] == 0xaf &&
+		encrypted[0xA] == 0x70 &&
+		encrypted[0xB] == 0xa0 &&
+		encrypted[0xC] == 0xec &&
+		encrypted[0xD] == 0x0d &&
+		encrypted[0xE] == 0x71 &&
+		encrypted[0xF] == 0x91
+	);
+}
+
+
+bool test256Encrypted(unsigned char encrypted[])
+{
+	return (
+		encrypted[0x0] == 0x8e &&
+		encrypted[0x1] == 0xa2 &&
+		encrypted[0x2] == 0xb7 &&
+		encrypted[0x3] == 0xca &&
+		encrypted[0x4] == 0x51 &&
+		encrypted[0x5] == 0x67 &&
+		encrypted[0x6] == 0x45 &&
+		encrypted[0x7] == 0xbf &&
+		encrypted[0x8] == 0xea &&
+		encrypted[0x9] == 0xfc &&
+		encrypted[0xA] == 0x49 &&
+		encrypted[0xB] == 0x90 &&
+		encrypted[0xC] == 0x4b &&
+		encrypted[0xD] == 0x49 &&
+		encrypted[0xE] == 0x60 &&
+		encrypted[0xF] == 0x89
+	);
+}
+
 bool testDecrypted(char plaintext[])
 {
 	for(int i = 0; i < 0x10; i++)
@@ -90,7 +135,7 @@ int main()
 	else
 		printf("AES 128 Encryption Fail\n");
 	
-
+	//ARS-128 Decrypt
 	plaintextClear(plaintext);
 	aes.aes128Decrypt(plaintext, encrypted, key);
 
@@ -99,10 +144,47 @@ int main()
 	else
 		printf("AES 128 Decryption Fail\n");	
 
+	//AES-192 Encrypt
+	plaintextInit(plaintext);
+	keyInit(key);
+	encryptedClear(encrypted);
 
-		//getHexArrayAsString(getStringAsHexArray("dda97ca4864cdfe06eaf70a0ec0d7191")),
+	aes.aes192Encrypt(encrypted, plaintext, key);
 
-		//getHexArrayAsString(getStringAsHexArray("8ea2b7ca516745bfeafc49904b496089")),
+	if(test192Encrypted(encrypted))
+		printf("AES 192 Encryption Success\n");
+	else
+		printf("AES 192 Encryption Fail\n");
+	
+	//ARS-192 Decrypt
+	plaintextClear(plaintext);
+	aes.aes192Decrypt(plaintext, encrypted, key);
 
+	if(testDecrypted(plaintext))
+		printf("AES 192 Decryption Success\n");
+	else
+		printf("AES 192 Decryption Fail\n");
+
+	//AES-256 Encrypt
+	plaintextInit(plaintext);
+	keyInit(key);
+	encryptedClear(encrypted);
+
+	aes.aes256Encrypt(encrypted, plaintext, key);
+
+	if(test256Encrypted(encrypted))
+		printf("AES 256 Encryption Success\n");
+	else
+		printf("AES 256 Encryption Fail\n");
+	
+	//ARS-256 Decrypt
+	plaintextClear(plaintext);
+	aes.aes256Decrypt(plaintext, encrypted, key);
+
+	if(testDecrypted(plaintext))
+		printf("AES 256 Decryption Success\n");
+	else
+		printf("AES 256 Decryption Fail\n");
+	
 	return 0;
 }
