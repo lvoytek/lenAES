@@ -1,4 +1,4 @@
-#include "../lenAES.h"
+#include "lenAES.h"
 #include <stdio.h>
 
 //Init plaintext array to 00112233445566778899AABBCCDDEEFF
