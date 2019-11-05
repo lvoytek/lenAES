@@ -1,5 +1,9 @@
 #ifndef LENAES_H
 #define LENAES_H
+
+#include <math.h> //For pow
+#include <stdlib.h> //For memory allocation
+
 const unsigned int SBox[][16] = {
 	{0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76},
 	{0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0},
@@ -48,7 +52,7 @@ private:
 	/*
  	 * XOR each column of the state with a given word from the key schedule
  	 */
-	void addRoundKey(unsigned char * state, int * word);
+	void addRoundKey(unsigned char * state, unsigned int * word);
 	
 	/*
  	 * Nonlinear byte by byte substitution using SBox
@@ -109,7 +113,7 @@ private:
 	/*
 	 * Expand a 4*Nk byte key to an array of Nb*(Nr+1) words
 	 */
-	void keyExpansion(unsigned char * expandedKey, unsigned char * key);
+	void keyExpansion(unsigned int * expandedKey, unsigned char * key);
 
 	void generalEncrypt(unsigned char * output, char * plaintext, unsigned char * key);
 	void generalDecrypt(char * plaintext, unsigned char * input, unsigned char * key);
