@@ -116,7 +116,7 @@ private:
 	void keyExpansion(unsigned int * expandedKey, unsigned char * key);
 
 	unsigned char * generalEncrypt(char * plaintext, unsigned char * key);
-	unsigned char * generalDecrypt(unsigned char * input, unsigned char * key);
+	char * generalDecrypt(unsigned char * input, unsigned char * key);
 
 public:
 	/*
@@ -144,19 +144,19 @@ public:
 	 * Take in a variable length byte array and a 128-bit byte array
 	 * key and return the resulting plaintext as a string
 	 */
-	unsigned char * aes128Decrypt(unsigned char * input, unsigned char * key);
+	char * aes128Decrypt(unsigned char * input, unsigned char * key);
 
 	/*
 	 * Take in a variable length byte array and a 192-bit byte array
 	 * key and return the resulting plaintext as a string
 	 */
-	unsigned char * aes192Decrypt(unsigned char * input, unsigned char * key);
+	char * aes192Decrypt(unsigned char * input, unsigned char * key);
 
 	/*
 	 * Take in a variable length byte array and a 256-bit byte array
 	 * key and return the resulting plaintext as a string
 	 */
-	unsigned char * aes256Decrypt(unsigned char * input, unsigned char * key);
+	char * aes256Decrypt(unsigned char * input, unsigned char * key);
 };
 
 #endif
