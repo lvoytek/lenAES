@@ -94,7 +94,7 @@ bool testDecrypted(char plaintext[])
 {
 	for(int i = 0; i < 0x10; i++)
 	{
-		if(plaintext[i] != ((i << 4) ^ i))
+		if(plaintext[i] != (char)((i << 4) ^ i))
 			return false;
 	}
 
