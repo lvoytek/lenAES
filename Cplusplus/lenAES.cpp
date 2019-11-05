@@ -286,6 +286,23 @@ unsigned char * AES::generalEncrypt(char * plaintext, unsigned int length, unsig
 char * AES::generalDecrypt(unsigned char * input, unsigned int length, unsigned char * key)
 {
 	char * plaintext = (char *) calloc(length, sizeof(char));
+
+	//Expand the key
+	unsigned int * expandedKey = (unsigned int *) calloc(this->Nb * (this->Nr + 1), sizeof(unsigned int));
+	this->keyExpansion(expandedKey, key);
+
+	//Split plaintext up into 128-bit (Nb*4*8bit) chunks and decrypt each
+	unsigned int i = 0;
+	while(i < length)
+	{
+		invCipher(input + i, expandedKey);
+		i += Nb*4;
+	}
+
+	//Copy input to plaintext
+	for(unsigned int i = 0; i < length; i++)
+		plaintext[i] = (char) input[i];
+
 	return plaintext;
 }
 
