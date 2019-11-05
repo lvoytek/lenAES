@@ -115,8 +115,8 @@ private:
 	 */
 	void keyExpansion(unsigned int * expandedKey, unsigned char * key);
 
-	unsigned char * generalEncrypt(char * plaintext, unsigned char * key);
-	char * generalDecrypt(unsigned char * input, unsigned char * key);
+	unsigned char * generalEncrypt(char * plaintext, unsigned int length, unsigned char * key);
+	char * generalDecrypt(unsigned char * input, unsigned int length, unsigned char * key);
 
 public:
 	/*
