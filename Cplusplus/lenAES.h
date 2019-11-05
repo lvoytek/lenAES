@@ -124,39 +124,39 @@ public:
 	 * and return the 128-bit AES encrypted array as an 
 	 * 8-bit integer array
 	 */
-	unsigned char * aes128Encrypt(char * plaintext, unsigned char * key);
+	unsigned char * aes128Encrypt(char * plaintext, unsigned int length, unsigned char * key);
 
 	/*
 	 * Take in plain text of variable length and a 192-bit byte array key 
 	 * and return the 128-bit AES encrypted array as an 
 	 * 8-bit integer array
 	 */
-	unsigned char * aes192Encrypt(char * plaintext, unsigned char * key);
+	unsigned char * aes192Encrypt(char * plaintext, unsigned int length, unsigned char * key);
 
 	/*
 	 * Take in plain text of variable length and a 256-bit byte array key 
 	 * and return the 128-bit AES encrypted array as an 
 	 * 8-bit integer array
 	 */
-	unsigned char * aes256Encrypt(char * plaintext, unsigned char * key);
+	unsigned char * aes256Encrypt(char * plaintext, unsigned int length, unsigned char * key);
 
 	/*
 	 * Take in a variable length byte array and a 128-bit byte array
 	 * key and return the resulting plaintext as a string
 	 */
-	char * aes128Decrypt(unsigned char * input, unsigned char * key);
+	char * aes128Decrypt(unsigned char * input, unsigned int length, unsigned char * key);
 
 	/*
 	 * Take in a variable length byte array and a 192-bit byte array
 	 * key and return the resulting plaintext as a string
 	 */
-	char * aes192Decrypt(unsigned char * input, unsigned char * key);
+	char * aes192Decrypt(unsigned char * input, unsigned int length, unsigned char * key);
 
 	/*
 	 * Take in a variable length byte array and a 256-bit byte array
 	 * key and return the resulting plaintext as a string
 	 */
-	char * aes256Decrypt(unsigned char * input, unsigned char * key);
+	char * aes256Decrypt(unsigned char * input, unsigned int length, unsigned char * key);
 };
 
 #endif
