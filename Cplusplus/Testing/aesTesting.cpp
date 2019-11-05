@@ -2,21 +2,16 @@
 #include <stdio.h>
 
 //Init plaintext array to 00112233445566778899AABBCCDDEEFF
-void plaintextInit(char plaintext[])
+char * plaintextInit()
 {
+	char * plaintext = (char *) calloc(16, sizeof(char));
+	
 	for(int i = 0; i < 0x10; i++)
 	{
 		plaintext[i] = (i << 4) ^ i;
 	}
-}
 
-//Clear plaintext to all 0's
-void plaintextClear(char plaintext[])
-{
-	for(int i = 0; i < 0x10; i++)
-	{
-		plaintext[i] = 0x0;
-	}
+	return plaintext;
 }
 
 //Initialize the key
@@ -25,15 +20,6 @@ void keyInit(unsigned char key[])
 	for(int i = 0; i < 0x20; i++)
 	{
 		key[i] = i;
-	}
-}
-
-//Clear encrypted area
-void encryptedClear(unsigned char encrypted[])
-{
-	for(int i = 0; i < 0x10; i++)
-	{
-		encrypted[i] = 0x0;
 	}
 }
 
@@ -119,16 +105,15 @@ int main()
 {
 	AES aes = AES();
 
-	char plaintext[16];
+	char * plaintext;
 	unsigned char key[32];
-	unsigned char encrypted[16];
+	unsigned char * encrypted;
 
 	//AES-128 Encrypt
-	plaintextInit(plaintext);
+	plaintext = plaintextInit();
 	keyInit(key);
-	encryptedClear(encrypted);
 
-	aes.aes128Encrypt(encrypted, plaintext, key);
+	encrypted = aes.aes128Encrypt(plaintext, 16, key);
 
 	if(test128Encrypted(encrypted))
 		printf("AES 128 Encryption Success\n");
@@ -136,8 +121,8 @@ int main()
 		printf("AES 128 Encryption Fail\n");
 	
 	//ARS-128 Decrypt
-	plaintextClear(plaintext);
-	aes.aes128Decrypt(plaintext, encrypted, key);
+	free(plaintext);
+	plaintext = aes.aes128Decrypt(encrypted, 16, key);
 
 	if(testDecrypted(plaintext))
 		printf("AES 128 Decryption Success\n");
@@ -145,11 +130,11 @@ int main()
 		printf("AES 128 Decryption Fail\n");	
 
 	//AES-192 Encrypt
-	plaintextInit(plaintext);
-	keyInit(key);
-	encryptedClear(encrypted);
+	free(plaintext);
+	plaintext = plaintextInit();
+	free(encrypted);
 
-	aes.aes192Encrypt(encrypted, plaintext, key);
+	encrypted = aes.aes192Encrypt(plaintext, 16, key);
 
 	if(test192Encrypted(encrypted))
 		printf("AES 192 Encryption Success\n");
@@ -157,8 +142,8 @@ int main()
 		printf("AES 192 Encryption Fail\n");
 	
 	//ARS-192 Decrypt
-	plaintextClear(plaintext);
-	aes.aes192Decrypt(plaintext, encrypted, key);
+	free(plaintext);
+	plaintext = aes.aes192Decrypt(encrypted, 16, key);
 
 	if(testDecrypted(plaintext))
 		printf("AES 192 Decryption Success\n");
@@ -166,11 +151,11 @@ int main()
 		printf("AES 192 Decryption Fail\n");
 
 	//AES-256 Encrypt
-	plaintextInit(plaintext);
-	keyInit(key);
-	encryptedClear(encrypted);
+	free(plaintext);
+	plaintext = plaintextInit();
+	free(encrypted);
 
-	aes.aes256Encrypt(encrypted, plaintext, key);
+	encrypted = aes.aes256Encrypt(plaintext, 16, key);
 
 	if(test256Encrypted(encrypted))
 		printf("AES 256 Encryption Success\n");
@@ -178,8 +163,8 @@ int main()
 		printf("AES 256 Encryption Fail\n");
 	
 	//ARS-256 Decrypt
-	plaintextClear(plaintext);
-	aes.aes256Decrypt(plaintext, encrypted, key);
+	free(plaintext);
+	plaintext = aes.aes256Decrypt(encrypted, 16, key);
 
 	if(testDecrypted(plaintext))
 		printf("AES 256 Decryption Success\n");
